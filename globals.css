@@ -1,0 +1,3 @@
+@import "tailwindcss";
+@theme { --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif; }
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:#111}button,input,textarea,select{font:inherit}.accent{background:#D4FF32}.card{background:#fff;border:1px solid #e7e7e2;border-radius:28px}.muted{color:#6d6d67}.dot{width:9px;height:9px;border-radius:50%;background:#D4FF32;display:inline-block}
