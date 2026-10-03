@@ -15,7 +15,7 @@ export default function SignupPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  async function handleSignup(e: any) {
+  async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setMsg("Creating account...")
 
@@ -50,53 +50,130 @@ export default function SignupPage() {
   }
 
   return (
-    <main style={{ maxWidth: 400, margin: "40px auto", padding: 20 }}>
-      <h1>Sign up</h1>
+    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+      <div className="mx-auto max-w-md">
 
-      <form onSubmit={handleSignup}>
-        <input
-          placeholder="Full name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
+        <div className="mb-6 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 text-3xl">
+            🌐
+          </div>
 
-        <input
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          <h1 className="mt-4 text-3xl font-extrabold">
+            Create your account
+          </h1>
 
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <p className="mt-2 text-slate-600">
+            Join LanguageTalk and find language partners around the world.
+          </p>
+        </div>
 
-        <input
-          placeholder="Native language (e.g. Hindi)"
-          value={nativeLanguage}
-          onChange={(e) => setNativeLanguage(e.target.value)}
-          required
-        />
+        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
 
-        <input
-          placeholder="Learning language (e.g. English)"
-          value={learningLanguage}
-          onChange={(e) => setLearningLanguage(e.target.value)}
-          required
-        />
+          <form onSubmit={handleSignup} className="space-y-5">
 
-        <button type="submit">
-          Create Account
-        </button>
-      </form>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Full name
+              </label>
 
-      <p>{msg}</p>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Email
+              </label>
+
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Password
+              </label>
+
+              <input
+                type="password"
+                placeholder="Create a password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Native language
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. Hindi"
+                value={nativeLanguage}
+                onChange={(e) => setNativeLanguage(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Learning language
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. English"
+                value={learningLanguage}
+                onChange={(e) => setLearningLanguage(e.target.value)}
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white transition hover:bg-blue-700"
+            >
+              Create Account
+            </button>
+
+          </form>
+
+          {msg && (
+            <p className="mt-4 text-center text-sm text-slate-600">
+              {msg}
+            </p>
+          )}
+
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Log in
+            </button>
+          </p>
+
+        </div>
+      </div>
     </main>
   )
-          }
+            }
