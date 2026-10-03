@@ -51,7 +51,7 @@ export default function Dashboard() {
             <p className="mt-2 text-slate-600">
               Discover people who are learning and speaking your languages.
             </p>
-            <button className="mt-5 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white">
+            <button onClick={() => router.push("/partners")} className="mt-5 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white">
               Find People
             </button>
           </div>
