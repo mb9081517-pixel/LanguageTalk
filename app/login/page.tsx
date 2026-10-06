@@ -89,7 +89,7 @@ const [msg, setMsg] = useState("");
                 Password
               </label>
 
-              <<div className="relative">
+              <div className="relative">
   <input
     type={showPassword ? "text" : "password"}
     placeholder="Your password"
