@@ -133,7 +133,7 @@ export default function Home() {
               <img
                 src="https://raw.githubusercontent.com/mb9081517-pixel/LanguageTalk/main/file_0000000072c0820893be1340c6613864.png"
                 alt="Friends from different countries"
-                className="h-[430px] w-full rounded-[3rem] object-cover shadow-2xl sm:h-[520px]"
+                className="w-full h-auto aspect-[16/9] rounded-[2rem] object-contain shadow-2xl"
               />
 
               {/* Speech bubbles */}
