@@ -131,7 +131,7 @@ export default function Home() {
             <div className="relative">
 
               <img
-                src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=90"
+                src="/hero-group.png"
                 alt="Friends from different countries"
                 className="h-[430px] w-full rounded-[3rem] object-cover shadow-2xl sm:h-[520px]"
               />
