@@ -10,13 +10,13 @@ export default function Home() {
 
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
 
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-2xl shadow-md">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-2xl shadow-md sm:h-12 sm:w-12">
               🌍
             </div>
 
@@ -24,6 +24,7 @@ export default function Home() {
               <div className="text-xl font-extrabold sm:text-2xl">
                 Language<span className="text-blue-600">Talk</span>
               </div>
+
               <div className="hidden text-[9px] font-bold tracking-[3px] text-slate-400 sm:block">
                 LEARN • CONNECT • GROW
               </div>
@@ -31,31 +32,46 @@ export default function Home() {
           </button>
 
           <nav className="hidden gap-7 lg:flex">
-            <a href="#features" className="font-semibold text-slate-600 hover:text-blue-600">
+            <a
+              href="#features"
+              className="font-semibold text-slate-600 hover:text-blue-600"
+            >
               Features
             </a>
-            <a href="#languages" className="font-semibold text-slate-600 hover:text-blue-600">
+
+            <a
+              href="#languages"
+              className="font-semibold text-slate-600 hover:text-blue-600"
+            >
               Languages
             </a>
-            <a href="#how" className="font-semibold text-slate-600 hover:text-blue-600">
+
+            <a
+              href="#how"
+              className="font-semibold text-slate-600 hover:text-blue-600"
+            >
               How it works
             </a>
-            <a href="#community" className="font-semibold text-slate-600 hover:text-blue-600">
+
+            <a
+              href="#community"
+              className="font-semibold text-slate-600 hover:text-blue-600"
+            >
               Community
             </a>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => router.push("/login")}
-              className="rounded-full px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100"
+              className="rounded-full px-3 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 sm:px-4"
             >
               Log in
             </button>
 
             <button
               onClick={() => router.push("/signup")}
-              className="rounded-full bg-blue-600 px-5 py-2.5 font-bold text-white shadow-md hover:bg-blue-700"
+              className="rounded-full bg-blue-600 px-4 py-2.5 font-bold text-white shadow-md hover:bg-blue-700 sm:px-5"
             >
               Sign up
             </button>
@@ -65,12 +81,12 @@ export default function Home() {
       </header>
 
 
-      {/* HERO / HEADING */}
+      {/* HERO */}
       <section className="overflow-hidden bg-gradient-to-br from-sky-50 via-white to-blue-100">
 
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 lg:grid-cols-2 lg:py-20">
 
-          {/* HEADING */}
+          {/* HERO TEXT */}
           <div className="relative z-10">
 
             <div className="mb-6 inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700">
@@ -79,9 +95,11 @@ export default function Home() {
 
             <h1 className="text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
               Talk to the world.
+
               <span className="block text-blue-600">
                 Learn languages.
               </span>
+
               <span className="block text-blue-600">
                 Make friends.
               </span>
@@ -117,41 +135,38 @@ export default function Home() {
           </div>
 
 
-          {/* BIG HERO PHOTO */}
+          {/* HERO PHOTO */}
           <div className="relative">
 
             {/* Glow */}
             <div className="absolute inset-5 rounded-[4rem] bg-blue-300/40 blur-3xl" />
 
-            {/* World circle */}
+            {/* Background circle */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-[90%] w-[90%] rounded-full bg-blue-100/70" />
             </div>
 
-            <div className="relative">
+            {/* PHOTO */}
+            <div className="relative overflow-hidden rounded-[2rem] shadow-2xl">
 
               <img
                 src="https://raw.githubusercontent.com/mb9081517-pixel/LanguageTalk/main/file_0000000072c0820893be1340c6613864.png"
                 alt="Friends from different countries"
-                className="w-full h-auto aspect-[16/9] rounded-[2rem] object-contain shadow-2xl"
+                className="block h-auto w-full object-contain"
               />
 
-              {/* Speech bubbles */}
+            </div>
 
-              <div className="absolute left-[-10px] top-12 rounded-2xl bg-white px-5 py-3 text-lg font-bold text-blue-600 shadow-xl sm:left-[-25px]">
-                नमस्ते 👋
-              </div>
-
-              <div className="absolute right-[-10px] top-8 rounded-2xl bg-white px-5 py-3 text-lg font-bold text-blue-600 shadow-xl sm:right-[-25px]">
-                Hello! 👋
-            
+          </div>
 
         </div>
+
       </section>
 
 
       {/* FEATURES */}
       <section id="features" className="bg-white">
+
         <div className="mx-auto grid max-w-6xl gap-5 px-5 py-14 md:grid-cols-3">
 
           <Feature
@@ -173,14 +188,17 @@ export default function Home() {
           />
 
         </div>
+
       </section>
 
 
       {/* LANGUAGES */}
       <section id="languages" className="px-4">
+
         <div className="mx-auto max-w-7xl rounded-[2rem] bg-sky-50 px-5 py-12 sm:px-8">
 
           <div className="text-center">
+
             <p className="font-bold text-blue-600">
               FIND YOUR PARTNER
             </p>
@@ -192,40 +210,68 @@ export default function Home() {
             <p className="mt-3 text-slate-500">
               Choose a language and meet someone new.
             </p>
+
           </div>
 
           <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            <Country flag="🇮🇳 🇺🇸" title="India → USA" text="Hindi • English" />
-            <Country flag="🇮🇳 🇯🇵" title="India → Japan" text="English • Japanese" />
-            <Country flag="🇮🇳 🇫🇷" title="India → France" text="English • French" />
-            <Country flag="🇮🇳 🇪🇸" title="India → Spain" text="English • Spanish" />
+            <Country
+              flag="🇮🇳 🇺🇸"
+              title="India → USA"
+              text="Hindi • English"
+            />
+
+            <Country
+              flag="🇮🇳 🇯🇵"
+              title="India → Japan"
+              text="English • Japanese"
+            />
+
+            <Country
+              flag="🇮🇳 🇫🇷"
+              title="India → France"
+              text="English • French"
+            />
+
+            <Country
+              flag="🇮🇳 🇪🇸"
+              title="India → Spain"
+              text="English • Spanish"
+            />
 
           </div>
 
           <div className="mt-8 text-center">
+
             <button
               onClick={() => router.push("/partners")}
               className="rounded-full bg-blue-600 px-8 py-3.5 font-bold text-white shadow-lg hover:bg-blue-700"
             >
               🔎 Find a Partner →
             </button>
+
           </div>
 
         </div>
+
       </section>
 
 
       {/* HOW IT WORKS */}
       <section id="how">
+
         <div className="mx-auto max-w-7xl px-5 py-20">
 
           <div className="text-center">
-            <p className="font-bold text-blue-600">HOW IT WORKS</p>
+
+            <p className="font-bold text-blue-600">
+              HOW IT WORKS
+            </p>
 
             <h2 className="mt-2 text-3xl font-black sm:text-4xl">
               Start your language journey
             </h2>
+
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -254,11 +300,15 @@ export default function Home() {
           </div>
 
         </div>
+
       </section>
 
 
       {/* COMMUNITY */}
-      <section id="community" className="bg-slate-900 px-5 py-16 text-white">
+      <section
+        id="community"
+        className="bg-slate-900 px-5 py-16 text-white"
+      >
 
         <div className="mx-auto max-w-6xl">
 
@@ -286,6 +336,7 @@ export default function Home() {
           </div>
 
         </div>
+
       </section>
 
 
@@ -348,6 +399,7 @@ function Feature({
 }) {
   return (
     <div className="rounded-3xl p-6 text-center transition hover:bg-blue-50">
+
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-3xl">
         {icon}
       </div>
@@ -359,6 +411,7 @@ function Feature({
       <p className="mt-2 leading-6 text-slate-500">
         {text}
       </p>
+
     </div>
   );
 }
@@ -445,7 +498,9 @@ function Review({
   return (
     <div className="rounded-3xl bg-white p-7 text-slate-900 shadow-lg">
 
-      <div className="text-3xl">💬</div>
+      <div className="text-3xl">
+        💬
+      </div>
 
       <p className="mt-4 text-lg font-medium leading-7">
         “{text}”
@@ -457,4 +512,4 @@ function Review({
 
     </div>
   );
-}
+      }
