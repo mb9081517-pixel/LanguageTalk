@@ -24,8 +24,13 @@ export default function SignupPage() {
     setLoading(true)
     setMsg("Creating account...")
 
+    const cleanEmail = email.trim()
+    const cleanName = name.trim()
+    const cleanNativeLanguage = nativeLanguage.trim()
+    const cleanLearningLanguage = learningLanguage.trim()
+
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: cleanEmail,
       password,
     })
 
@@ -35,25 +40,34 @@ export default function SignupPage() {
       return
     }
 
-    if (data.user && data.session) {
-      const username = `user_${data.user.id.slice(0, 8)}`
+    if (!data.user) {
+      setLoading(false)
+      setMsg("Account could not be created. Please try again.")
+      return
+    }
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
+    const username = `user_${data.user.id.slice(0, 8)}`
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
           id: data.user.id,
           username,
-          full_name: name.trim(),
-          email: email.trim(),
-          native_language: nativeLanguage.trim(),
-          learning_language: learningLanguage.trim(),
-        })
+          full_name: cleanName,
+          email: cleanEmail,
+          native_language: cleanNativeLanguage,
+          learning_language: cleanLearningLanguage,
+        },
+        {
+          onConflict: "id",
+        }
+      )
 
-      if (profileError) {
-        setLoading(false)
-        setMsg(profileError.message)
-        return
-      }
+    if (profileError) {
+      setLoading(false)
+      setMsg(profileError.message)
+      return
     }
 
     setLoading(false)
@@ -127,6 +141,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -192,4 +207,4 @@ export default function SignupPage() {
       </div>
     </main>
   )
-      }
+}
