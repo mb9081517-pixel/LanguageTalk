@@ -164,7 +164,21 @@ export default function SignupPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xl"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "🙈" : "👁️"}
+                  <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="black"
+  strokeWidth="2"
+  className="h-6 w-6"
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M2.25 12s3.75-6 9.75-6 9.75 6 9.75 6-3.75 6-9.75 6-9.75-6-9.75-6Z"
+  />
+  <circle cx="12" cy="12" r="2.5" fill="black" />
+</svg>
                 </button>
               </div>
             </div>
