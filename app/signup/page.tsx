@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
@@ -15,7 +15,13 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
 
   const supabase = createClient()
-
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      window.location.replace("/dashboard")
+    }
+  })
+}, [])
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
