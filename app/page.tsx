@@ -144,19 +144,7 @@ export default function Home() {
 
               <div className="absolute right-[-10px] top-8 rounded-2xl bg-white px-5 py-3 text-lg font-bold text-blue-600 shadow-xl sm:right-[-25px]">
                 Hello! 👋
-              </div>
-
-              <div className="absolute bottom-10 right-[-5px] rounded-2xl bg-white px-5 py-3 text-lg font-bold text-blue-600 shadow-xl sm:right-[-20px]">
-                Bonjour! 🇫🇷
-              </div>
-
-              <div className="absolute bottom-[-12px] left-1/2 -translate-x-1/2 rounded-full bg-white px-6 py-3 font-bold shadow-xl">
-                🌍 People from around the world
-              </div>
-
-            </div>
-
-          </div>
+            
 
         </div>
       </section>
