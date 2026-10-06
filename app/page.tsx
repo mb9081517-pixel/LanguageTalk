@@ -131,7 +131,7 @@ export default function Home() {
             <div className="relative">
 
               <img
-                file_0000000072c0820893be1340c6613864.png
+                src="/file_0000000072c0820893be1340c6613864.png"
                 alt="Friends from different countries"
                 className="h-[430px] w-full rounded-[3rem] object-cover shadow-2xl sm:h-[520px]"
               />
