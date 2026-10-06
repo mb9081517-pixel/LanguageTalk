@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+const [showPassword, setShowPassword] = useState(false);
+const [msg, setMsg] = useState("");
 
   const router = useRouter();
   const supabase = createClient();
@@ -88,14 +89,39 @@ export default function LoginPage() {
                 Password
               </label>
 
-              <input
-                type="password"
-                placeholder="Your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+              <<div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Your password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 -translate-y-1/2"
+    aria-label={showPassword ? "Hide password" : "Show password"}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="black"
+      strokeWidth="2"
+      className="h-6 w-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 12s3.75-6 9.75-6 9.75 6 9.75 6-3.75 6-9.75 6-9.75-6-9.75-6Z"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="black" />
+    </svg>
+  </button>
+</div>
             </div>
 
             <div className="text-right">
