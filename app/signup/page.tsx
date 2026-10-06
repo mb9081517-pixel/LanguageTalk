@@ -1,19 +1,19 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [nativeLanguage, setNativeLanguage] = useState("")
   const [learningLanguage, setLearningLanguage] = useState("")
   const [msg, setMsg] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const router = useRouter()
   const supabase = createClient()
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
@@ -21,13 +21,25 @@ export default function SignupPage() {
 
     if (loading) return
 
-    setLoading(true)
-    setMsg("Creating account...")
+    setMsg("")
 
-    const cleanEmail = email.trim()
     const cleanName = name.trim()
+    const cleanEmail = email.trim().toLowerCase()
     const cleanNativeLanguage = nativeLanguage.trim()
     const cleanLearningLanguage = learningLanguage.trim()
+
+    if (password.length < 6) {
+      setMsg("Password must be at least 6 characters.")
+      return
+    }
+
+    if (!cleanName || !cleanEmail || !cleanNativeLanguage || !cleanLearningLanguage) {
+      setMsg("Please fill in all fields.")
+      return
+    }
+
+    setLoading(true)
+    setMsg("Creating account...")
 
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
@@ -74,8 +86,8 @@ export default function SignupPage() {
     setMsg("Account created successfully!")
 
     setTimeout(() => {
-      router.push("/login")
-    }, 1500)
+      window.location.href = "/login"
+    }, 1200)
   }
 
   return (
@@ -135,15 +147,26 @@ export default function SignupPage() {
                 Password
               </label>
 
-              <input
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xl"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
 
             <div>
@@ -194,13 +217,12 @@ export default function SignupPage() {
 
           <p className="mt-6 text-center text-sm text-slate-600">
             Already have an account?{" "}
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
+            <Link
+              href="/login"
               className="font-semibold text-blue-600 hover:underline"
             >
               Log in
-            </button>
+            </Link>
           </p>
 
         </div>
