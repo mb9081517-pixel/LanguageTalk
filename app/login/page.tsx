@@ -27,7 +27,7 @@ const [msg, setMsg] = useState("");
       return;
     }
 
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }
 
   async function handleForgotPassword() {
