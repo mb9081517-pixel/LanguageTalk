@@ -172,6 +172,61 @@ export default function Dashboard() {
   }
 
   async function sendFriendRequest(person: Profile) {
+  try {
+    setMessage("");
+
+    if (!userId) {
+      setMessage("Pehle login karein.");
+      return;
+    }
+
+    if (person.id === userId) {
+      setMessage("Aap khud ko friend request nahi bhej sakte.");
+      return;
+    }
+
+    setSendingTo(person.id);
+    setMessage("Friend request bheji ja rahi hai...");
+
+    const { data: existing, error: checkError } = await supabase
+      .from("friend_requests")
+      .select("id, sender_id, receiver_id, status")
+      .or(
+        `and(sender_id.eq.${userId},receiver_id.eq.${person.id}),and(sender_id.eq.${person.id},receiver_id.eq.${userId})`
+      )
+      .limit(1);
+
+    if (checkError) {
+      setMessage("Database error: " + checkError.message);
+      return;
+    }
+
+    if (existing && existing.length > 0) {
+      setMessage("In dono users ke beech friend request pehle se maujood hai.");
+      return;
+    }
+
+    const { error } = await supabase.from("friend_requests").insert({
+      sender_id: userId,
+      receiver_id: person.id,
+      status: "pending",
+    });
+
+    if (error) {
+      setMessage("Request send nahi hui: " + error.message);
+      return;
+    }
+
+    setMessage("Friend request successfully send ho gayi!");
+  } catch (error) {
+    setMessage(
+      "Error: " +
+        (error instanceof Error ? error.message : "Unknown error")
+    );
+  } finally {
+    setSendingTo("");
+  }
+}
     if (!userId || sendingTo) return;
 
     setSendingTo(person.id);
