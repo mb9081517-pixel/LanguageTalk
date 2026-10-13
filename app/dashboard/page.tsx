@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,117 +15,136 @@ type Profile = {
 
 export default function Dashboard() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
+  const [myProfile, setMyProfile] = useState<Profile | null>(null);
+  const [people, setPeople] = useState<Profile[]>([]);
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [avatarVisible, setAvatarVisible] = useState(false);
-  const [zoomOpen, setZoomOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
-
   const [bio, setBio] = useState("");
-  const [bioOpen, setBioOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [section, setSection] = useState("Home");
+  const [loading, setLoading] = useState(true);
   const [savingBio, setSavingBio] = useState(false);
-
-  const [friendsOpen, setFriendsOpen] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [message, setMessage] = useState("");
+  const [sendingTo, setSendingTo] = useState("");
 
   useEffect(() => {
     let active = true;
 
-    async function loadUser() {
-      const { data, error } = await supabase.auth.getUser();
+    async function loadDashboard() {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
 
-      if (!active) return;
-
-      if (error || !data.user) {
+      if (!user) {
         router.replace("/login");
         return;
       }
 
-      setUserId(data.user.id);
+      if (!active) return;
+      setUserId(user.id);
+      setEmail(user.email ?? "");
 
-      const { data: profile } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("bio")
-        .eq("id", data.user.id)
+        .select("id, username, full_name, native_language, learning_language, bio")
+        .eq("id", user.id)
         .maybeSingle();
 
-      if (active && profile) {
-        setBio(profile.bio || "");
+      if (!active) return;
+
+      if (profileError) {
+        setMessage("Profile load nahi hua: " + profileError.message);
       }
 
-      const { data: publicData } = supabase.storage
+      if (profileData) {
+        const profile = profileData as Profile;
+        setMyProfile(profile);
+        setBio(profile.bio ?? "");
+      }
+
+      const { data: peopleData, error: peopleError } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, native_language, learning_language, bio")
+        .neq("id", user.id)
+        .limit(50);
+
+      if (!active) return;
+
+      if (peopleError) {
+        setMessage("Members load nahi hue: " + peopleError.message);
+      } else {
+        setPeople((peopleData ?? []) as Profile[]);
+      }
+
+      const { data: avatarData } = supabase.storage
         .from("profile-photos")
-        .getPublicUrl(`${data.user.id}/avatar`);
+        .getPublicUrl(`${user.id}/avatar`);
 
       if (active) {
-        setAvatarUrl(`${publicData.publicUrl}?t=${Date.now()}`);
+        setAvatarUrl(avatarData.publicUrl);
         setLoading(false);
       }
     }
 
-    loadUser();
+    loadDashboard();
 
     return () => {
       active = false;
     };
   }, [router, supabase]);
 
-  async function handleUpload(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  const filteredPeople = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return people;
 
+    return people.filter((person) =>
+      [
+        person.full_name,
+        person.username,
+        person.native_language,
+        person.learning_language,
+      ]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(term))
+    );
+  }, [people, search]);
+
+  async function uploadPhoto(file?: File) {
     if (!file || !userId) return;
 
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type)
-    ) {
-      setMessage("Please choose a JPG, PNG, or WebP image.");
+    if (!file.type.startsWith("image/")) {
+      setMessage("Sirf image file upload karein.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setMessage("Photo must be 5 MB or smaller.");
+      setMessage("Photo 5 MB se chhoti honi chahiye.");
       return;
     }
 
-    setUploading(true);
-    setMessage("");
+    setMessage("Photo upload ho rahi hai...");
 
-    try {
-      const { error } = await supabase.storage
-        .from("profile-photos")
-        .upload(`${userId}/avatar`, file, {
-          upsert: true,
-          contentType: file.type,
-          cacheControl: "3600",
-        });
+    const { error } = await supabase.storage
+      .from("profile-photos")
+      .upload(`${userId}/avatar`, file, {
+        upsert: true,
+        contentType: file.type,
+      });
 
-      if (error) {
-        setMessage(`Photo upload failed: ${error.message}`);
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from("profile-photos")
-        .getPublicUrl(`${userId}/avatar`);
-
-      setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
-      setAvatarVisible(false);
-      setZoomOpen(false);
-      setMessage("Profile picture updated successfully!");
-    } catch {
-      setMessage("Something went wrong. Please try again.");
-    } finally {
-      setUploading(false);
+    if (error) {
+      setMessage("Photo upload nahi hui: " + error.message);
+      return;
     }
+
+    const { data } = supabase.storage
+      .from("profile-photos")
+      .getPublicUrl(`${userId}/avatar`);
+
+    setAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
+    setMessage("Profile picture update ho gayi!");
   }
 
   async function saveBio() {
@@ -143,324 +161,341 @@ export default function Dashboard() {
     setSavingBio(false);
 
     if (error) {
-      setMessage(`Bio could not be saved: ${error.message}`);
+      setMessage("Bio save nahi hui: " + error.message);
       return;
     }
 
-    setBioOpen(false);
-    setMessage("Bio saved successfully!");
+    setMyProfile((current) =>
+      current ? { ...current, bio: bio.trim() } : current
+    );
+    setMessage("Bio save ho gayi!");
   }
 
-  async function loadProfiles() {
-    setFriendsOpen(true);
-    setLoadingProfiles(true);
+  async function sendFriendRequest(person: Profile) {
+    if (!userId || sendingTo) return;
+
+    setSendingTo(person.id);
     setMessage("");
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, full_name, native_language, learning_language, bio"
-      )
-      .neq("id", userId || "")
-      .limit(50);
+    const { error } = await supabase.from("friend_requests").insert({
+      sender_id: userId,
+      receiver_id: person.id,
+      status: "pending",
+    });
 
-    setLoadingProfiles(false);
+    setSendingTo("");
 
     if (error) {
-      setMessage(`Could not load people: ${error.message}`);
-      setProfiles([]);
+      setMessage(
+        "Friend request send nahi hui. Supabase friend_requests table/policies check karein: " +
+          error.message
+      );
       return;
     }
 
-    setProfiles((data || []) as Profile[]);
+    setMessage(
+      `Friend request ${person.full_name || person.username || "member"} ko bhej di gayi!`
+    );
   }
 
-  async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
+  async function logout() {
+    await supabase.auth.signOut();
+    router.replace("/");
+  }
 
-    if (error) {
-      setMessage("Logout failed. Please try again.");
-      return;
-    }
-
-    router.replace("/login");
+  function openSection(name: string) {
+    setSection(name);
+    setMessage("");
+    if (name === "Messages") router.push("/chat");
+    if (name === "Find Partners") router.push("/partners");
   }
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-600">Loading your dashboard...</p>
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-700">
+        LanguageTalk khul raha hai...
       </main>
     );
   }
 
+  const navItems = [
+    "Home",
+    "Find Friends",
+    "Find Partners",
+    "Messages",
+    "Notifications",
+    "My Profile",
+  ];
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-100 text-2xl">
-              🌐
-            </div>
-            <span className="text-xl font-bold sm:text-2xl">
-              LanguageTalk
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+          <button
+            onClick={() => openSection("Home")}
+            className="flex items-center gap-2 text-left"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-2xl text-white shadow">
+              🌍
             </span>
-          </div>
+            <span>
+              <span className="block text-xl font-extrabold tracking-tight">
+                Language<span className="text-blue-600">Talk</span>
+              </span>
+              <span className="hidden text-[10px] font-semibold tracking-[0.2em] text-slate-500 sm:block">
+                LEARN · CONNECT · GROW
+              </span>
+            </span>
+          </button>
 
           <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-full border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
+            onClick={logout}
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
           >
             Log Out
           </button>
         </div>
+
+        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3">
+          {navItems.map((item) => (
+            <button
+              key={item}
+              onClick={() => openSection(item)}
+              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${
+                section === item
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="rounded-3xl bg-blue-600 p-6 text-white shadow-lg sm:p-8">
-          <p className="text-blue-100">Welcome to LanguageTalk 👋</p>
-          <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">
-            Start your language journey.
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-blue-100">
-            Find language partners, practice speaking, and connect
-            with people from around the world.
-          </p>
-        </div>
-
-        <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm sm:p-7">
-          <h2 className="text-xl font-bold">My Profile</h2>
-
-          <div className="mt-5 flex flex-col items-start gap-5">
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt="Your profile picture"
-                onLoad={() => setAvatarVisible(true)}
-                onError={() => setAvatarVisible(false)}
-                onClick={() => {
-                  if (avatarVisible) setZoomOpen(true);
-                }}
-                className={`h-[220px] w-[180px] rounded-xl border border-slate-200 object-cover shadow-sm ${
-                  avatarVisible ? "cursor-zoom-in" : "hidden"
-                }`}
-              />
-            )}
-
-            {!avatarVisible && (
-              <div className="flex h-[220px] w-[180px] items-center justify-center rounded-xl border border-slate-200 bg-sky-100 text-5xl">
-                👤
-              </div>
-            )}
-
-            <div>
-              <p className="font-semibold">Your profile picture</p>
-              <p className="mt-1 text-sm text-slate-500">
-                JPG, PNG or WebP · Maximum 5 MB
-              </p>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleUpload}
-                className="hidden"
-              />
-
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-4 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-              >
-                {uploading
-                  ? "Uploading..."
-                  : avatarVisible
-                    ? "Change Profile Picture"
-                    : "Add Profile Picture"}
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-7 border-t border-slate-100 pt-6">
-            <h3 className="text-lg font-bold">My Bio</h3>
-            <p className="mt-2 whitespace-pre-wrap text-slate-600">
-              {bio || "Tell people about yourself and the languages you want to practice."}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setBioOpen(!bioOpen)}
-              className="mt-4 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              {bioOpen ? "Cancel" : "Add Bio"}
-            </button>
-
-            {bioOpen && (
-              <div className="mt-4">
-                <label htmlFor="profile-bio" className="mb-2 block font-medium">
-                  About me
-                </label>
-                <textarea
-                  id="profile-bio"
-                  value={bio}
-                  onChange={(event) => setBio(event.target.value)}
-                  maxLength={500}
-                  rows={4}
-                  placeholder="Hi! I want to practice English and meet new friends..."
-                  className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-500"
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[280px_1fr]">
+        <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="text-center">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-blue-100 bg-blue-50 text-4xl">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt="Profile picture"
+                  className="h-full w-full object-cover"
                 />
-                <p className="mt-1 text-sm text-slate-500">
-                  {bio.length}/500 characters
-                </p>
-                <button
-                  type="button"
-                  disabled={savingBio}
-                  onClick={saveBio}
-                  className="mt-3 rounded-full bg-green-600 px-5 py-3 font-semibold text-white disabled:opacity-60"
-                >
-                  {savingBio ? "Saving..." : "Save Bio"}
-                </button>
-              </div>
-            )}
+              ) : (
+                "👤"
+              )}
+            </div>
+
+            <h2 className="mt-3 text-lg font-bold">
+              {myProfile?.full_name || "LanguageTalk Member"}
+            </h2>
+            <p className="break-all text-xs text-slate-500">{email}</p>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => uploadPhoto(event.target.files?.[0])}
+            />
+
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+            >
+              📷 Add Profile Picture
+            </button>
           </div>
 
+          <div className="my-5 border-t border-slate-100" />
+
+          <label className="text-sm font-bold">About Me / Bio</label>
+          <textarea
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            placeholder="Tell people about yourself and the languages you want to learn..."
+            maxLength={500}
+            rows={4}
+            className="mt-2 w-full resize-y rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-blue-500"
+          />
+          <p className="mt-1 text-right text-xs text-slate-400">
+            {bio.length}/500
+          </p>
+          <button
+            onClick={saveBio}
+            disabled={savingBio}
+            className="mt-2 w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+          >
+            {savingBio ? "Saving..." : "Save Bio"}
+          </button>
+
+          <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm">
+            <p>
+              <span className="text-slate-500">Native language</span>
+              <strong className="mt-1 block">
+                {myProfile?.native_language || "Not added yet"}
+              </strong>
+            </p>
+            <p>
+              <span className="text-slate-500">Learning language</span>
+              <strong className="mt-1 block">
+                {myProfile?.learning_language || "Not added yet"}
+              </strong>
+            </p>
+          </div>
+        </aside>
+
+        <section className="min-w-0 space-y-6">
           {message && (
-            <p role="status" className="mt-4 break-words text-sm text-slate-700">
+            <div
+              role="status"
+              className="break-words rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800"
+            >
               {message}
-            </p>
+            </div>
           )}
-        </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <div className="rounded-3xl bg-white p-7 shadow-sm">
-            <div className="text-3xl">🌍</div>
-            <h2 className="mt-4 text-xl font-bold">Find Partners</h2>
-            <p className="mt-2 text-slate-600">
-              Discover people who are learning and speaking your languages.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push("/partners")}
-              className="mt-5 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              Find People
-            </button>
-          </div>
-
-          <div className="rounded-3xl bg-white p-7 shadow-sm">
-            <div className="text-3xl">💬</div>
-            <h2 className="mt-4 text-xl font-bold">Messages</h2>
-            <p className="mt-2 text-slate-600">
-              Chat with your language partners and practice every day.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push("/chat")}
-              className="mt-5 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              Open Chat
-            </button>
-          </div>
-
-          <div className="rounded-3xl bg-white p-7 shadow-sm md:col-span-2">
-            <div className="text-3xl">👋</div>
-            <h2 className="mt-4 text-xl font-bold">Add Friend</h2>
-            <p className="mt-2 text-slate-600">
-              Discover other LanguageTalk members and view their profiles.
-            </p>
-            <button
-              type="button"
-              onClick={loadProfiles}
-              className="mt-5 rounded-full bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              Find Friends
-            </button>
-
-            {friendsOpen && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold">People on LanguageTalk</h3>
+          {section === "Home" && (
+            <>
+              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500 p-6 text-white shadow-sm sm:p-9">
+                <p className="text-sm font-semibold text-blue-100">
+                  YOUR WORLDWIDE LANGUAGE COMMUNITY
+                </p>
+                <h1 className="mt-3 max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl">
+                  Meet the world. Make friends. Learn languages.
+                </h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-blue-50 sm:text-base">
+                  Connect with people from different countries and practise a
+                  new language through real conversations.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
                   <button
-                    type="button"
-                    onClick={() => setFriendsOpen(false)}
-                    className="rounded-full border px-3 py-1.5"
+                    onClick={() => openSection("Find Friends")}
+                    className="rounded-xl bg-white px-5 py-3 font-bold text-blue-700 hover:bg-blue-50"
                   >
-                    Close
+                    Find Friends →
+                  </button>
+                  <button
+                    onClick={() => openSection("Find Partners")}
+                    className="rounded-xl border border-white/60 px-5 py-3 font-bold text-white hover:bg-white/10"
+                  >
+                    Find Language Partners
                   </button>
                 </div>
-
-                {loadingProfiles ? (
-                  <p className="mt-4 text-slate-600">Loading people...</p>
-                ) : profiles.length === 0 ? (
-                  <p className="mt-4 text-slate-600">
-                    No other profiles found, or profiles could not be loaded.
-                    Check the message above if one appears.
-                  </p>
-                ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {profiles.map((profile) => (
-                      <div
-                        key={profile.id}
-                        className="rounded-2xl border border-slate-200 p-4"
-                      >
-                        <h4 className="font-bold">
-                          {profile.full_name || profile.username || "LanguageTalk member"}
-                        </h4>
-                        {(profile.native_language || profile.learning_language) && (
-                          <p className="mt-1 text-sm text-slate-600">
-                            {profile.native_language || "Language not set"}
-                            {" → "}
-                            {profile.learning_language || "Language not set"}
-                          </p>
-                        )}
-                        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">
-                          {profile.bio || "This member hasn't added a bio yet."}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMessage(
-                              "Friend requests need the friend_requests table and its security policies before they can be sent."
-                            )
-                          }
-                          className="mt-4 rounded-full border border-blue-600 px-4 py-2 font-semibold text-blue-700 hover:bg-blue-50"
-                        >
-                          Add Friend
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        </div>
-      </section>
 
-      {zoomOpen && avatarVisible && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-          onClick={() => setZoomOpen(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setZoomOpen(false)}
-            className="absolute right-5 top-5 rounded-full bg-white px-4 py-2 text-xl font-bold text-black"
-            aria-label="Close enlarged profile picture"
-          >
-            ✕
-          </button>
-          <img
-            src={avatarUrl}
-            alt="Enlarged profile picture"
-            className="max-h-[85vh] max-w-full rounded-xl object-contain"
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
-      )}
-    </main>
-  );
-        }
-  
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  {
+                    icon: "🌎",
+                    title: "Meet the World",
+                    desc: "Discover members from different places.",
+                    action: "Find Friends",
+                  },
+                  {
+                    icon: "💬",
+                    title: "Start Conversations",
+                    desc: "Open chat and practise together.",
+                    action: "Messages",
+                  },
+                  {
+                    icon: "📚",
+                    title: "Learn Together",
+                    desc: "Find people learning your language.",
+                    action: "Find Partners",
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.title}
+                    onClick={() => openSection(item.action)}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                  >
+                    <span className="text-3xl">{item.icon}</span>
+                    <h3 className="mt-3 font-bold">{item.title}</h3>
+                    <p className="mt-1 text-sm leading-5 text-slate-500">
+                      {item.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-extrabold">Meet new members</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      People you can connect with on LanguageTalk.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => openSection("Find Friends")}
+                    className="font-bold text-blue-600 hover:text-blue-800"
+                  >
+                    View all →
+                  </button>
+                </div>
+                <PeopleList
+                  people={people.slice(0, 3)}
+                  onAddFriend={sendFriendRequest}
+                  sendingTo={sendingTo}
+                />
+              </div>
+            </>
+          )}
+
+          {section === "Find Friends" && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-7">
+              <h1 className="text-2xl font-extrabold">Find Friends</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Search members by name, username, or language.
+              </p>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search people or languages..."
+                className="mt-5 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500"
+              />
+              <PeopleList
+                people={filteredPeople}
+                onAddFriend={sendFriendRequest}
+                sendingTo={sendingTo}
+              />
+              {filteredPeople.length === 0 && (
+                <p className="py-8 text-center text-slate-500">
+                  No members found. Try another search.
+                </p>
+              )}
+            </div>
+          )}
+
+          {section === "Notifications" && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-6">
+              <h1 className="text-2xl font-extrabold">Notifications</h1>
+              <p className="mt-2 text-slate-600">
+                Friend request and activity notifications will appear here
+                when the notifications feature is connected to your database.
+              </p>
+            </div>
+          )}
+
+          {section === "My Profile" && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-6">
+              <h1 className="text-2xl font-extrabold">My Profile</h1>
+              <p className="mt-2 text-slate-600">
+                Your profile picture and bio can be updated in the left panel.
+              </p>
+              <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4">
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {myProfile?.full_name || "Not added yet"}
+                </p>
+                <p>
+                  <strong>Username:</strong>{" "}
+                  {myProfile?.username || "Not added yet"}
+                </p>
+                <p>
+                  <strong>Email:</strong> {email}
+        </
