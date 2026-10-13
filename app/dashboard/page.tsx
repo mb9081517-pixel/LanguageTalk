@@ -498,4 +498,92 @@ export default function Dashboard() {
                 </p>
                 <p>
                   <strong>Email:</strong> {email}
-        </
+                </p>
+                <p>
+                  <strong>Native language:</strong>{" "}
+                  {myProfile?.native_language || "Not added yet"}
+                </p>
+                <p>
+                  <strong>Learning language:</strong>{" "}
+                  {myProfile?.learning_language || "Not added yet"}
+                </p>
+                <p>
+                  <strong>Bio:</strong> {bio || "Write your bio in the left panel."}
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <footer className="border-t border-slate-200 bg-white px-4 py-5 text-center text-xs text-slate-500">
+        © {new Date().getFullYear()} LanguageTalk · Learn · Connect · Grow
+      </footer>
+    </main>
+  );
+}
+
+function PeopleList({
+  people,
+  onAddFriend,
+  sendingTo,
+}: {
+  people: Profile[];
+  onAddFriend: (person: Profile) => void;
+  sendingTo: string;
+}) {
+  if (people.length === 0) {
+    return (
+      <p className="py-8 text-center text-sm text-slate-500">
+        Abhi dikhane ke liye koi aur member nahi mila.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {people.map((person) => (
+        <article
+          key={person.id}
+          className="rounded-2xl border border-slate-200 p-4 transition hover:border-blue-200 hover:shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xl">
+              👤
+            </div>
+            <div className="min-w-0">
+              <h3 className="truncate font-bold">
+                {person.full_name || person.username || "LanguageTalk Member"}
+              </h3>
+              <p className="truncate text-xs text-slate-500">
+                @{person.username || "member"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm">
+            <p>
+              <span className="text-slate-500">Speaks:</span>{" "}
+              {person.native_language || "Not specified"}
+            </p>
+            <p>
+              <span className="text-slate-500">Learning:</span>{" "}
+              {person.learning_language || "Not specified"}
+            </p>
+            {person.bio && (
+              <p className="line-clamp-3 text-slate-600">{person.bio}</p>
+            )}
+          </div>
+
+          <button
+            onClick={() => onAddFriend(person)}
+            disabled={sendingTo === person.id}
+            className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {sendingTo === person.id ? "Sending..." : "＋ Add Friend"}
+          </button>
+        </article>
+      ))}
+    </div>
+  );
+                   }
